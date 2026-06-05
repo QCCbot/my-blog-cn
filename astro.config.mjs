@@ -6,6 +6,6 @@ import { defineConfig } from 'astro/config';
 
 // https://astro.build/config
 export default defineConfig({
-	site: 'https://qccbot-blog-cn.pages.dev',
+	site: 'https://cn-blog.qccbot.com',
 	integrations: [mdx(), sitemap()],
 });
