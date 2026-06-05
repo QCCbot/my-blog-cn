@@ -6,78 +6,594 @@ import Footer from '../components/Footer.astro';
 import FormattedDate from '../components/FormattedDate.astro';
 import Header from '../components/Header.astro';
 
-type Props = CollectionEntry<'blog'>['data'];
+type BlogData = CollectionEntry<'blog'>['data'];
+type Heading = {
+	depth: number;
+	slug: string;
+	text: string;
+};
+type RelatedPost = Pick<BlogData, 'title' | 'description'> & { slug: string };
+type Props = BlogData & {
+	headings?: Heading[];
+	relatedPosts?: RelatedPost[];
+	slug?: string;
+	body?: string;
+};
 
-const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
+const {
+	title,
+	description,
+	pubDate,
+	updatedDate,
+	heroImage,
+	headings = [],
+	relatedPosts = [],
+	body = '',
+} = Astro.props;
+
+const articleUrl = new URL(Astro.url.pathname, 'https://cn-blog.qccbot.com').toString();
+const shareText = encodeURIComponent(title);
+const shareUrl = encodeURIComponent(articleUrl);
+const articleHeadings = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
+const keySections = headings.filter((heading) => heading.depth === 2).slice(0, 4);
+const plainBody = body
+	.replace(/```[\s\S]*?```/g, ' ')
+	.replace(/<[^>]+>/g, ' ')
+	.replace(/[#>*_`[\]()!-]/g, ' ')
+	.trim();
+const cjkCount = (plainBody.match(/[\u3400-\u9fff]/g) ?? []).length;
+const wordCount = plainBody.split(/\s+/).filter(Boolean).length;
+const readingTime = Math.max(3, Math.ceil(Math.max(wordCount / 220, cjkCount / 450)));
+
+const lowerTitle = title.toLowerCase();
+const category = lowerTitle.includes('autojs')
+	? 'AutoJS 脚本'
+	: lowerTitle.includes('agent')
+		? 'AI Agent'
+		: title.includes('短视频') || title.includes('TikTok')
+			? '社媒运营'
+			: title.includes('跨境') || title.includes('Shop')
+				? '跨境工作流'
+				: '云手机自动化';
 ---
 
 <html lang="zh-CN">
 	<head>
 		<BaseHead title={title} description={description} />
 		<style>
+			:root {
+				--qccbot-navy: #0f2638;
+				--qccbot-blue: #2337ff;
+				--qccbot-cyan: #0ca6c8;
+				--qccbot-line: #dfe8ef;
+				--qccbot-soft: #f5f9fb;
+				--qccbot-mint: #e8f7f3;
+			}
+			.post-page *,
+			.post-page *::before,
+			.post-page *::after {
+				box-sizing: border-box;
+			}
 			main {
-				width: calc(100% - 2em);
-				max-width: 100%;
-				margin: 0;
-			}
-			.hero-image {
 				width: 100%;
+				max-width: none;
+				margin: 0;
+				padding: 0;
 			}
-			.hero-image img {
-				display: block;
+			.post-page {
+				background: #fff;
+				overflow-x: hidden;
+			}
+			.post-hero {
+				padding: 4.5rem 1.25rem 2.25rem;
+				border-bottom: 1px solid var(--qccbot-line);
+				background:
+					linear-gradient(0deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.92)),
+					linear-gradient(90deg, #eff9fb, #f8fbff);
+			}
+			.hero-inner {
+				max-width: 1120px;
 				margin: 0 auto;
-				border-radius: 12px;
-				box-shadow: var(--box-shadow);
 			}
-			.prose {
-				width: 720px;
-				max-width: calc(100% - 2em);
-				margin: auto;
-				padding: 1em;
-				color: rgb(var(--gray-dark));
+			.category-tag {
+				display: inline-flex;
+				align-items: center;
+				margin-bottom: 1.1rem;
+				padding: 0.35rem 0.65rem;
+				border: 1px solid rgba(12, 166, 200, 0.35);
+				border-radius: 999px;
+				background: #fff;
+				color: var(--qccbot-cyan);
+				font-size: 0.78rem;
+				font-weight: 700;
 			}
-			.title {
-				margin-bottom: 1em;
-				padding: 1em 0;
-				text-align: center;
-				line-height: 1;
+			.post-hero h1 {
+				max-width: 900px;
+				margin: 0;
+				color: var(--qccbot-navy);
+				font-size: clamp(2.35rem, 5vw, 5rem);
+				line-height: 1.05;
+				letter-spacing: 0;
+				overflow-wrap: anywhere;
 			}
-			.title h1 {
-				margin: 0 0 0.5em 0;
+			.subtitle {
+				max-width: 760px;
+				margin: 1.25rem 0 0;
+				color: #42566c;
+				font-size: 1.18rem;
+				line-height: 1.75;
+				overflow-wrap: anywhere;
 			}
-			.date {
-				margin-bottom: 0.5em;
-				color: rgb(var(--gray));
+			.hero-footer {
+				display: flex;
+				flex-wrap: wrap;
+				align-items: center;
+				justify-content: space-between;
+				gap: 1rem;
+				margin-top: 1.8rem;
 			}
-			.last-updated-on {
-				font-style: italic;
+			.post-meta {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.65rem 1rem;
+				color: #53677a;
+				font-size: 0.95rem;
+			}
+			.post-meta span:not(:last-child)::after {
+				content: "/";
+				margin-left: 1rem;
+				color: #9aaabd;
+			}
+			.share-row {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.5rem;
+			}
+			.share-row a {
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				min-height: 2.25rem;
+				padding: 0 0.75rem;
+				border: 1px solid var(--qccbot-line);
+				border-radius: 999px;
+				background: #fff;
+				color: var(--qccbot-navy);
+				font-size: 0.88rem;
+				font-weight: 700;
+				text-decoration: none;
+			}
+			.share-row a:hover {
+				border-color: var(--qccbot-cyan);
+				color: var(--qccbot-cyan);
+			}
+			.hero-media {
+				max-width: 1120px;
+				margin: 2rem auto 0;
+			}
+			.hero-media img {
+				display: block;
+				width: 100%;
+				border-radius: 8px;
+				box-shadow: 0 24px 60px rgba(15, 38, 56, 0.16);
+			}
+			.article-shell {
+				display: grid;
+				grid-template-columns: minmax(170px, 220px) minmax(0, 760px) minmax(210px, 270px);
+				gap: 2rem;
+				max-width: 1360px;
+				margin: 0 auto;
+				padding: 3rem 1.25rem 4rem;
+			}
+			.toc,
+			.right-rail {
+				position: sticky;
+				top: 5rem;
+				align-self: start;
+			}
+			.sidebar-card,
+			.key-card,
+			.reader-cta,
+			.faq-block,
+			.related-posts,
+			.author-card {
+				border: 1px solid var(--qccbot-line);
+				border-radius: 8px;
+				background: #fff;
+			}
+			.sidebar-card {
+				padding: 1rem;
+			}
+			.sidebar-title {
+				margin: 0 0 0.75rem;
+				color: var(--qccbot-navy);
+				font-size: 0.82rem;
+				font-weight: 700;
+			}
+			.toc nav {
+				display: grid;
+				gap: 0.45rem;
+			}
+			.toc a {
+				color: #52687c;
+				font-size: 0.92rem;
+				line-height: 1.45;
+				text-decoration: none;
+			}
+			.toc a.depth-3 {
+				padding-left: 0.85rem;
+				font-size: 0.84rem;
+			}
+			.toc a:hover {
+				color: var(--qccbot-blue);
+			}
+			.article-main {
+				min-width: 0;
+			}
+			.key-card {
+				margin-bottom: 1.4rem;
+				padding: 1.1rem;
+				background: var(--qccbot-soft);
+			}
+			.key-card h2,
+			.faq-block h2,
+			.related-posts h2,
+			.author-card h2 {
+				margin: 0 0 0.8rem;
+				font-size: 1.25rem;
+				line-height: 1.2;
+			}
+			.key-card ul {
+				display: grid;
+				gap: 0.55rem;
+				margin: 0;
+				padding-left: 1.15rem;
+			}
+			.reader-cta {
+				margin: 1.4rem 0 2.25rem;
+				padding: 1.15rem;
+				background: var(--qccbot-mint);
+			}
+			.reader-cta p {
+				margin: 0.35rem 0 0.9rem;
+				color: #385060;
+				font-size: 0.98rem;
+				line-height: 1.65;
+			}
+			.cta-link {
+				display: inline-flex;
+				align-items: center;
+				min-height: 2.35rem;
+				padding: 0 0.9rem;
+				border-radius: 6px;
+				background: var(--qccbot-navy);
+				color: #fff;
+				font-size: 0.92rem;
+				font-weight: 700;
+				text-decoration: none;
+			}
+			.article-body {
+				color: #26394d;
+				font-size: 1.05rem;
+				line-height: 1.9;
+				overflow-wrap: anywhere;
+			}
+			.article-body :global(p) {
+				margin: 0 0 1.2rem;
+			}
+			.article-body :global(h2) {
+				margin: 3.2rem 0 1rem;
+				padding-top: 0.25rem;
+				color: var(--qccbot-navy);
+				font-size: clamp(2rem, 4vw, 2.8rem);
+				line-height: 1.12;
+				letter-spacing: 0;
+			}
+			.article-body :global(h3) {
+				margin: 2.1rem 0 0.75rem;
+				color: #152f43;
+				font-size: 1.55rem;
+				line-height: 1.25;
+			}
+			.article-body :global(ul),
+			.article-body :global(ol) {
+				display: grid;
+				gap: 0.55rem;
+				margin: 0 0 1.4rem;
+				padding-left: 1.4rem;
+			}
+			.article-body :global(li) {
+				padding-left: 0.2rem;
+			}
+			.article-body :global(blockquote) {
+				margin: 2rem 0;
+				padding: 1rem 1.2rem;
+				border-left: 4px solid var(--qccbot-cyan);
+				border-radius: 0 8px 8px 0;
+				background: var(--qccbot-soft);
+				font-size: 1.08rem;
+			}
+			.article-body :global(p:has(a[href*="qccbot.com"])) {
+				margin: 2rem 0;
+				padding: 1rem 1.1rem;
+				border: 1px solid rgba(35, 55, 255, 0.18);
+				border-radius: 8px;
+				background: #f7f8ff;
+			}
+			.faq-block,
+			.related-posts,
+			.author-card {
+				margin-top: 2.5rem;
+				padding: 1.2rem;
+			}
+			.faq-list {
+				display: grid;
+				gap: 0.8rem;
+			}
+			.faq-item {
+				padding: 0.95rem;
+				border: 1px solid var(--qccbot-line);
+				border-radius: 8px;
+				background: var(--qccbot-soft);
+			}
+			.faq-item h3 {
+				margin: 0 0 0.35rem;
+				font-size: 1rem;
+			}
+			.faq-item p {
+				margin: 0;
+				color: #40566a;
+				font-size: 0.95rem;
+				line-height: 1.65;
+			}
+			.related-grid {
+				display: grid;
+				gap: 0.85rem;
+			}
+			.related-card {
+				display: block;
+				padding: 1rem;
+				border: 1px solid var(--qccbot-line);
+				border-radius: 8px;
+				color: inherit;
+				text-decoration: none;
+			}
+			.related-card:hover {
+				border-color: var(--qccbot-cyan);
+			}
+			.related-card h3 {
+				margin: 0 0 0.35rem;
+				font-size: 1.05rem;
+			}
+			.related-card p {
+				margin: 0;
+				color: #52687c;
+				font-size: 0.92rem;
+				line-height: 1.6;
+			}
+			.author-card {
+				background: var(--qccbot-soft);
+			}
+			.author-card p {
+				margin: 0;
+				color: #40566a;
+				font-size: 0.95rem;
+				line-height: 1.7;
+			}
+			.rail-cta {
+				padding: 1rem;
+				background: var(--qccbot-navy);
+				color: #fff;
+			}
+			.rail-cta h2 {
+				margin: 0 0 0.45rem;
+				color: #fff;
+				font-size: 1.05rem;
+				line-height: 1.35;
+			}
+			.rail-cta p {
+				margin: 0 0 0.9rem;
+				color: #d6e7ef;
+				font-size: 0.9rem;
+				line-height: 1.6;
+			}
+			.rail-cta a {
+				display: inline-flex;
+				align-items: center;
+				min-height: 2.25rem;
+				padding: 0 0.75rem;
+				border-radius: 6px;
+				background: #fff;
+				color: var(--qccbot-navy);
+				font-size: 0.9rem;
+				font-weight: 700;
+				text-decoration: none;
+			}
+			.rail-share {
+				margin-top: 1rem;
+			}
+			@media (max-width: 1180px) {
+				.article-shell {
+					grid-template-columns: minmax(170px, 220px) minmax(0, 760px);
+				}
+				.right-rail {
+					display: none;
+				}
+			}
+			@media (max-width: 900px) {
+				.post-hero {
+					padding-top: 2.75rem;
+				}
+				.article-shell {
+					display: block;
+					padding-top: 2rem;
+				}
+				.toc {
+					position: static;
+					margin-bottom: 1.25rem;
+				}
+				.toc nav {
+					grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+				}
+				.post-hero h1 {
+					font-size: clamp(2.05rem, 12vw, 3.1rem);
+				}
+				.hero-footer {
+					align-items: flex-start;
+					flex-direction: column;
+				}
 			}
 		</style>
 	</head>
 
 	<body>
 		<Header />
-		<main>
+		<main class="post-page">
 			<article>
-				<div class="hero-image">
-					{heroImage && <Image width={1020} height={510} src={heroImage} alt="" />}
-				</div>
-				<div class="prose">
-					<div class="title">
-						<div class="date">
-							<FormattedDate date={pubDate} />
-							{
-								updatedDate && (
-									<div class="last-updated-on">
-										Last updated on <FormattedDate date={updatedDate} />
-									</div>
-								)
-							}
-						</div>
+				<header class="post-hero">
+					<div class="hero-inner">
+						<span class="category-tag">{category}</span>
 						<h1>{title}</h1>
-						<hr />
+						<p class="subtitle">{description}</p>
+						<div class="hero-footer">
+							<div class="post-meta">
+								<span>QCCBot 编辑部</span>
+								<span><FormattedDate date={pubDate} /></span>
+								<span>{readingTime} 分钟阅读</span>
+								{
+									updatedDate && (
+										<span>
+											更新于 <FormattedDate date={updatedDate} />
+										</span>
+									)
+								}
+							</div>
+							<div class="share-row" aria-label="分享文章">
+								<a href={`https://www.linkedin.com/sharing/share-offsite/?url=${shareUrl}`} target="_blank"
+									>LinkedIn</a
+								>
+								<a href={`https://twitter.com/intent/tweet?text=${shareText}&url=${shareUrl}`} target="_blank"
+									>X</a
+								>
+								<a href={`mailto:?subject=${shareText}&body=${shareUrl}`}>Email</a>
+							</div>
+						</div>
 					</div>
-					<slot />
+					{
+						heroImage && (
+							<figure class="hero-media">
+								<Image width={1280} height={640} src={heroImage} alt="" />
+							</figure>
+						)
+					}
+				</header>
+
+				<div class="article-shell">
+					<aside class="toc" aria-label="文章目录">
+						<div class="sidebar-card">
+							<p class="sidebar-title">文章目录</p>
+							<nav>
+								{
+									articleHeadings.length > 0 ? (
+										articleHeadings.map((heading) => (
+											<a class={`depth-${heading.depth}`} href={`#${heading.slug}`}>
+												{heading.text}
+											</a>
+										))
+									) : (
+										<a href="#key-sections">重点内容</a>
+									)
+								}
+							</nav>
+						</div>
+					</aside>
+
+					<div class="article-main">
+						<section class="key-card" id="key-sections">
+							<h2>重点内容</h2>
+							<ul>
+								<li>这篇文章解决的真实问题</li>
+								{keySections.map((heading) => <li>{heading.text}</li>)}
+								<li>QCCBot 适合出现的场景</li>
+							</ul>
+						</section>
+
+						<section class="reader-cta" aria-label="QCCBot 工作流提示">
+							<strong>你也在处理类似的手机 App 工作流吗？</strong>
+							<p>
+								QCCBot 可以帮助团队运行 Android 云手机，用 AI 生成 AutoJS 脚本，并在脚本异常时通过可控开关尝试接管恢复。
+							</p>
+							<a class="cta-link" href="https://www.qccbot.com/">了解 QCCBot</a>
+						</section>
+
+						<div class="article-body">
+							<slot />
+						</div>
+
+						<section class="faq-block">
+							<h2>FAQ</h2>
+							<div class="faq-list">
+								<div class="faq-item">
+									<h3>这只适合开发者吗？</h3>
+									<p>不是。运营人员可以先描述任务，再用 xeasy code 生成或调整 AutoJS 脚本，然后在云手机上测试。</p>
+								</div>
+								<div class="faq-item">
+									<h3>AI 能恢复所有失败脚本吗？</h3>
+									<p>不能。AI 接管更适合可识别、可重复的问题。验证码、安全提醒、账号风险等仍然建议人工确认。</p>
+								</div>
+								<div class="faq-item">
+									<h3>为什么不用实体手机？</h3>
+									<p>当账号和任务数量变多时，云手机更容易分组、监控、运行脚本和记录异常，也更适合团队协作。</p>
+								</div>
+							</div>
+						</section>
+
+						<section class="reader-cta">
+							<strong>想减少人工一台台检查手机？</strong>
+							<p>用 QCCBot 把重复 Android App 任务变成可运行、可记录、可调试、可异常接管的 AI 云手机工作流。</p>
+							<a class="cta-link" href="https://www.qccbot.com/">访问 QCCBot 官网</a>
+						</section>
+
+						{relatedPosts.length > 0 && (
+							<section class="related-posts">
+								<h2>推荐阅读</h2>
+								<div class="related-grid">
+									{relatedPosts.map((post) => (
+										<a class="related-card" href={`/blog/${post.slug}/`}>
+											<h3>{post.title}</h3>
+											<p>{post.description}</p>
+										</a>
+									))}
+								</div>
+							</section>
+						)}
+
+						<section class="author-card">
+							<h2>关于 QCCBot</h2>
+							<p>
+								QCCBot 是面向团队的 AI 云手机平台，支持 Android 云手机、AutoJS 自动化、AI 脚本生成、任务日志和可控异常接管。
+							</p>
+						</section>
+					</div>
+
+					<aside class="right-rail" aria-label="文章操作">
+						<div class="rail-cta">
+							<h2>把手机 App 工作自动化</h2>
+							<p>用 AI 生成脚本，在云手机上运行，并在常见异常中尝试恢复。</p>
+							<a href="https://www.qccbot.com/">访问官网</a>
+						</div>
+						<div class="sidebar-card rail-share">
+							<p class="sidebar-title">分享</p>
+							<div class="share-row">
+								<a href={`https://www.linkedin.com/sharing/share-offsite/?url=${shareUrl}`} target="_blank"
+									>LinkedIn</a
+								>
+								<a href={`https://twitter.com/intent/tweet?text=${shareText}&url=${shareUrl}`} target="_blank"
+									>X</a
+								>
+							</div>
+						</div>
+					</aside>
 				</div>
 			</article>
 		</main>
