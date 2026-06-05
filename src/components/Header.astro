@@ -17,9 +17,9 @@ const englishHref = new URL(Astro.url.pathname, 'https://blog.qccbot.com').toStr
 			<HeaderLink href="/">首页</HeaderLink>
 			<HeaderLink href="/blog">博客</HeaderLink>
 			<HeaderLink href="/about">关于</HeaderLink>
+			<a class="language-switch" href={englishHref}>EN</a>
 		</div>
 		<div class="social-links">
-			<a class="language-link" href={englishHref}>EN</a>
 			<a class="icon-link" href="https://www.qccbot.com/" target="_blank">
 				<span class="sr-only">访问 QCCBot 官网</span>
 				<img src="/qccbot-icon.png" alt="" width="32" height="32" />
@@ -77,26 +77,17 @@ const englishHref = new URL(Astro.url.pathname, 'https://blog.qccbot.com').toStr
 		text-decoration: none;
 		border-bottom-color: var(--accent);
 	}
+	.language-switch {
+		margin-left: 0.25rem;
+		font-weight: 700;
+	}
 	.social-links,
 	.social-links a {
 		display: flex;
 		align-items: center;
 	}
-	.language-link {
-		justify-content: center;
-		min-width: 2.6rem;
-		height: 2rem;
-		margin-right: 0.25rem;
-		border: 1px solid rgb(var(--gray-light));
-		border-radius: 999px;
-		font-size: 0.9rem;
-		font-weight: 700;
-	}
-	.language-link:hover {
-		border-color: var(--accent);
-	}
 	@media (max-width: 720px) {
-		.social-links a:not(.language-link) {
+		.social-links {
 			display: none;
 		}
 	}
