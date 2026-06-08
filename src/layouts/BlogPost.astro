@@ -271,6 +271,10 @@ const structuredData = [
 				margin: 0 auto;
 				padding: 3rem 1.25rem 4rem;
 			}
+			.article-shell.no-toc {
+				grid-template-columns: minmax(0, 800px) minmax(210px, 270px);
+				justify-content: center;
+			}
 			.toc,
 			.right-rail {
 				position: sticky;
@@ -607,25 +611,27 @@ const structuredData = [
 					}
 				</header>
 
-				<div class="article-shell">
-					<aside class="toc" aria-label="文章目录">
-						<div class="sidebar-card">
-							<p class="sidebar-title">文章目录</p>
-							<nav>
-								{
-									articleHeadings.length > 0 ? (
-										articleHeadings.map((heading) => (
-											<a class={`depth-${heading.depth}`} href={`#${heading.slug}`}>
-												{heading.text}
-											</a>
-										))
-									) : (
-										<a href="#key-sections">重点内容</a>
-									)
-								}
-							</nav>
-						</div>
-					</aside>
+				<div class={`article-shell ${hideMeta ? 'no-toc' : ''}`}>
+					{
+						!hideMeta && (
+							<aside class="toc" aria-label="文章目录">
+								<div class="sidebar-card">
+									<p class="sidebar-title">文章目录</p>
+									<nav>
+										{articleHeadings.length > 0 ? (
+											articleHeadings.map((heading) => (
+												<a class={`depth-${heading.depth}`} href={`#${heading.slug}`}>
+													{heading.text}
+												</a>
+											))
+										) : (
+											<a href="#key-sections">重点内容</a>
+										)}
+									</nav>
+								</div>
+							</aside>
+						)
+					}
 
 					<div class="article-main">
 						<section class="answer-card" aria-label="快速回答">
