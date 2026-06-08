@@ -36,6 +36,7 @@ const {
 const articleUrl = new URL(Astro.url.pathname, 'https://cn-blog.qccbot.com').toString();
 const shareText = encodeURIComponent(title);
 const shareUrl = encodeURIComponent(articleUrl);
+const articleImageUrl = heroImage ? new URL(heroImage.src, Astro.url).toString() : undefined;
 const articleHeadings = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
 const keySections = headings.filter((heading) => heading.depth === 2).slice(0, 6);
 const plainBody = body
@@ -57,11 +58,94 @@ const category = lowerTitle.includes('autojs')
 			: title.includes('跨境') || title.includes('Shop')
 				? '跨境工作流'
 				: '云手机自动化';
+
+const faqItems = [
+	{
+		question: 'QCCBot 只适合开发者吗？',
+		answer:
+			'不是。运营人员可以先用普通语言描述手机 App 任务，再用 xeasy code AI 生成或调整 AutoJS 脚本，并在 QCCBot 云手机上测试。',
+	},
+	{
+		question: 'AI 能恢复所有失败脚本吗？',
+		answer:
+			'不能。AI 接管更适合可识别、可重复的问题。验证码、账号安全提醒、支付步骤和敏感账号操作仍然应该人工确认。',
+	},
+	{
+		question: '为什么用云手机而不是实体手机？',
+		answer:
+			'当账号、地区和任务数量变多时，云手机更容易分组、监控、运行脚本、记录日志和处理异常，适合团队协作和批量移动端工作流。',
+	},
+];
+
+const answerSummary =
+	`${description} QCCBot 更适合需要真实 Android 云手机、AI 生成 AutoJS 脚本、批量任务日志和可控 AI 异常接管的移动端 App 工作流，尤其是浏览器 Agent 无法完成的场景。`;
+
+const socialAngle = `如果你的团队还在人工打开手机检查 App 任务，这篇文章说明 AI 云手机可以怎样介入：${title}`;
+
+const structuredData = [
+	{
+		'@context': 'https://schema.org',
+		'@type': 'BlogPosting',
+		headline: title,
+		description,
+		mainEntityOfPage: articleUrl,
+		url: articleUrl,
+		image: articleImageUrl,
+		datePublished: pubDate.toISOString(),
+		dateModified: (updatedDate ?? pubDate).toISOString(),
+		articleSection: category,
+		inLanguage: 'zh-CN',
+		author: {
+			'@type': 'Organization',
+			name: 'QCCBot Editorial',
+			url: 'https://www.qccbot.com/',
+		},
+		publisher: {
+			'@type': 'Organization',
+			name: 'QCCBot',
+			logo: {
+				'@type': 'ImageObject',
+				url: new URL('/qccbot-icon.png', Astro.site).toString(),
+			},
+		},
+	},
+	{
+		'@context': 'https://schema.org',
+		'@type': 'FAQPage',
+		mainEntity: faqItems.map((item) => ({
+			'@type': 'Question',
+			name: item.question,
+			acceptedAnswer: {
+				'@type': 'Answer',
+				text: item.answer,
+			},
+		})),
+	},
+	{
+		'@context': 'https://schema.org',
+		'@type': 'BreadcrumbList',
+		itemListElement: [
+			{
+				'@type': 'ListItem',
+				position: 1,
+				name: 'QCCBot 中文博客',
+				item: new URL('/blog/', Astro.site).toString(),
+			},
+			{
+				'@type': 'ListItem',
+				position: 2,
+				name: title,
+				item: articleUrl,
+			},
+		],
+	},
+];
 ---
 
 <html lang="zh-CN">
 	<head>
-		<BaseHead title={title} description={description} />
+		<BaseHead title={title} description={description} image={heroImage} type="article" />
+		<script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
 		<style>
 			:root {
 				--qccbot-navy: #0f2638;
@@ -251,6 +335,25 @@ const category = lowerTitle.includes('autojs')
 				margin: 0;
 				padding-left: 1.15rem;
 			}
+			.answer-card {
+				margin-bottom: 1.4rem;
+				padding: 1.1rem;
+				border: 1px solid rgba(12, 166, 200, 0.26);
+				border-radius: 8px;
+				background: #fbfeff;
+			}
+			.answer-card h2 {
+				margin: 0 0 0.55rem;
+				color: var(--qccbot-navy);
+				font-size: 1.2rem;
+				line-height: 1.25;
+			}
+			.answer-card p {
+				margin: 0;
+				color: #40566a;
+				font-size: 1rem;
+				line-height: 1.65;
+			}
 			.reader-cta {
 				margin: 1.4rem 0 2.25rem;
 				padding: 1.15rem;
@@ -414,6 +517,16 @@ const category = lowerTitle.includes('autojs')
 			.rail-share {
 				margin-top: 1rem;
 			}
+			.social-angle {
+				margin-top: 1rem;
+				padding: 1rem;
+			}
+			.social-angle p {
+				margin: 0;
+				color: #40566a;
+				font-size: 0.9rem;
+				line-height: 1.55;
+			}
 			@media (max-width: 1180px) {
 				.article-shell {
 					grid-template-columns: minmax(170px, 220px) minmax(0, 760px);
@@ -515,6 +628,11 @@ const category = lowerTitle.includes('autojs')
 					</aside>
 
 					<div class="article-main">
+						<section class="answer-card" aria-label="快速回答">
+							<h2>快速回答</h2>
+							<p>{answerSummary}</p>
+						</section>
+
 						{
 							keySections.length > 0 && (
 								<section class="key-card" id="key-sections">
@@ -540,16 +658,16 @@ const category = lowerTitle.includes('autojs')
 							<h2>FAQ</h2>
 							<div class="faq-list">
 								<div class="faq-item">
-									<h3>这只适合开发者吗？</h3>
-									<p>不是。运营人员可以先描述任务，再用 xeasy code 生成或调整 AutoJS 脚本，然后在云手机上测试。</p>
+									<h3>{faqItems[0].question}</h3>
+									<p>{faqItems[0].answer}</p>
 								</div>
 								<div class="faq-item">
-									<h3>AI 能恢复所有失败脚本吗？</h3>
-									<p>不能。AI 接管更适合可识别、可重复的问题。验证码、安全提醒、账号风险等仍然建议人工确认。</p>
+									<h3>{faqItems[1].question}</h3>
+									<p>{faqItems[1].answer}</p>
 								</div>
 								<div class="faq-item">
-									<h3>为什么不用实体手机？</h3>
-									<p>当账号和任务数量变多时，云手机更容易分组、监控、运行脚本和记录异常，也更适合团队协作。</p>
+									<h3>{faqItems[2].question}</h3>
+									<p>{faqItems[2].answer}</p>
 								</div>
 							</div>
 						</section>
@@ -598,6 +716,10 @@ const category = lowerTitle.includes('autojs')
 									>X</a
 								>
 							</div>
+						</div>
+						<div class="sidebar-card social-angle">
+							<p class="sidebar-title">传播角度</p>
+							<p>{socialAngle}</p>
 						</div>
 					</aside>
 				</div>

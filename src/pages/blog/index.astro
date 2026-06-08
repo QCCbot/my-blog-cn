@@ -10,6 +10,45 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../../consts';
 const posts = (await getCollection('blog')).sort(
 	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
 );
+
+const pillars = [
+	{
+		name: 'AI 云手机自动化',
+		description: '如果你想用 AI 自动化 Android App 工作流，可以从这里开始。',
+		match: ['ai-cloud-phone', 'ai-mobile', 'android-cloud', 'automation-guide', 'best-practices'],
+	},
+	{
+		name: 'AutoJS 脚本与 AI 调试',
+		description: '学习如何生成、测试、调试 AutoJS 脚本，并在脚本异常时安全处理。',
+		match: ['autojs', 'script', 'xeasy', 'debug', 'recovery', 'failed'],
+	},
+	{
+		name: '社交电商与短视频运营',
+		description: '适合 TikTok、短视频、社媒账号检查、内容 QA 和移动端运营团队。',
+		match: ['tiktok', 'short-video', 'social', 'commerce', 'content'],
+	},
+	{
+		name: '账号安全、日志与团队治理',
+		description: '了解团队如何管理多台云手机、查看日志、复核异常并控制 AI 接管边界。',
+		match: ['security', 'logs', 'observability', 'account', 'guardian', 'groups'],
+	},
+];
+
+const pillarPosts = pillars.map((pillar) => ({
+	...pillar,
+	posts: posts
+		.filter((post) => pillar.match.some((term) => post.id.includes(term)))
+		.slice(0, 5),
+}));
+
+const searchQuestions = [
+	'不用实体手机，怎么自动化 Android App 任务？',
+	'AI 能不能生成和调试 AutoJS 脚本？',
+	'云手机脚本运行失败后怎么办？',
+	'多个 TikTok 或社交电商账号怎么每天巡检？',
+	'为什么浏览器 AI Agent 到手机 App 里就停住？',
+	'运营团队怎么查看日志、失败原因和 AI 恢复记录？',
+];
 ---
 
 <!doctype html>
@@ -18,70 +57,190 @@ const posts = (await getCollection('blog')).sort(
 		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
 		<style>
 			main {
-				width: 960px;
-			}
-			ul {
-				display: flex;
-				flex-wrap: wrap;
-				gap: 2rem;
-				list-style-type: none;
+				width: 100%;
+				max-width: none;
 				margin: 0;
 				padding: 0;
 			}
-			ul li {
-				width: calc(50% - 1rem);
+			.blog-hero {
+				padding: 4rem 1.25rem 2.5rem;
+				border-bottom: 1px solid #dfe8ef;
+				background:
+					linear-gradient(0deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.92)),
+					linear-gradient(90deg, #eff9fb, #f8fbff);
 			}
-			ul li * {
-				text-decoration: none;
-				transition: 0.2s ease;
+			.inner {
+				max-width: 1180px;
+				margin: 0 auto;
 			}
-			ul li:first-child {
-				width: 100%;
-				margin-bottom: 1rem;
-				text-align: center;
+			.eyebrow {
+				display: inline-flex;
+				margin: 0 0 1rem;
+				padding: 0.35rem 0.65rem;
+				border: 1px solid rgba(12, 166, 200, 0.35);
+				border-radius: 999px;
+				background: #fff;
+				color: #0c9fbd;
+				font-size: 0.82rem;
+				font-weight: 700;
 			}
-			ul li:first-child img {
-				width: 100%;
-			}
-			ul li:first-child .title {
-				font-size: 2.369rem;
-			}
-			ul li img {
-				margin-bottom: 0.5rem;
-				border-radius: 12px;
-			}
-			ul li a {
-				display: block;
-			}
-			.title {
+			h1 {
+				max-width: 920px;
 				margin: 0;
-				color: rgb(var(--black));
-				line-height: 1;
+				color: #0f2638;
+				font-size: clamp(2.6rem, 6vw, 5.4rem);
+				line-height: 1.02;
+				letter-spacing: 0;
+			}
+			.hero-copy {
+				max-width: 780px;
+				margin: 1.2rem 0 0;
+				color: #42566c;
+				font-size: 1.12rem;
+				line-height: 1.75;
+			}
+			.question-grid {
+				display: grid;
+				grid-template-columns: repeat(3, minmax(0, 1fr));
+				gap: 0.75rem;
+				margin-top: 2rem;
+			}
+			.question-grid a {
+				display: block;
+				padding: 0.95rem;
+				border: 1px solid #dfe8ef;
+				border-radius: 8px;
+				background: #fff;
+				color: #183246;
+				font-weight: 700;
+				line-height: 1.45;
+				text-decoration: none;
+			}
+			.question-grid a:hover {
+				border-color: #0ca6c8;
+				color: #2337ff;
+			}
+			.blog-body {
+				padding: 3rem 1.25rem 4rem;
+			}
+			.featured {
+				display: grid;
+				grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+				gap: 1.5rem;
+				align-items: stretch;
+				margin-bottom: 3rem;
+			}
+			.featured-card,
+			.post-card,
+			.pillar-card {
+				border: 1px solid #dfe8ef;
+				border-radius: 8px;
+				background: #fff;
+				overflow: hidden;
+			}
+			.featured-card a,
+			.post-card a {
+				display: block;
+				color: inherit;
+				text-decoration: none;
+			}
+			.featured-card img,
+			.post-card img {
+				display: block;
+				width: 100%;
+				height: auto;
+			}
+			.card-copy {
+				padding: 1.1rem;
+			}
+			.card-copy h2,
+			.card-copy h3 {
+				margin: 0 0 0.65rem;
+				color: #0f2638;
+				line-height: 1.18;
+			}
+			.card-copy p {
+				margin: 0;
+				color: #52687c;
+				line-height: 1.65;
 			}
 			.date {
+				display: block;
+				margin-top: 0.85rem;
+				color: #65798d;
+				font-size: 0.92rem;
+			}
+			.pillar-section {
+				margin-top: 2.75rem;
+			}
+			.section-heading {
+				margin: 0 0 1rem;
+				color: #0f2638;
+				font-size: clamp(1.8rem, 3vw, 2.6rem);
+				line-height: 1.12;
+			}
+			.pillar-grid {
+				display: grid;
+				grid-template-columns: repeat(2, minmax(0, 1fr));
+				gap: 1rem;
+			}
+			.pillar-card {
+				padding: 1.1rem;
+			}
+			.pillar-card h3 {
+				margin: 0 0 0.45rem;
+				color: #0f2638;
+				font-size: 1.2rem;
+			}
+			.pillar-card p {
+				margin: 0 0 1rem;
+				color: #52687c;
+				line-height: 1.65;
+			}
+			.pillar-card ul {
+				display: grid;
+				gap: 0.6rem;
 				margin: 0;
-				color: rgb(var(--gray));
+				padding: 0;
+				list-style: none;
 			}
-			ul li a:hover h4,
-			ul li a:hover .date {
-				color: rgb(var(--accent));
+			.pillar-card a {
+				color: #183246;
+				font-weight: 700;
+				line-height: 1.45;
+				text-decoration: none;
 			}
-			ul a:hover img {
-				box-shadow: var(--box-shadow);
+			.pillar-card a:hover {
+				color: #2337ff;
 			}
-			@media (max-width: 720px) {
-				ul {
-					gap: 0.5em;
-				}
-				ul li {
-					width: 100%;
-					text-align: center;
-				}
-				ul li:first-child {
-					margin-bottom: 0;
-				}
-				ul li:first-child .title {
-					font-size: 1.563em;
+			.recent-grid {
+				display: grid;
+				grid-template-columns: repeat(3, minmax(0, 1fr));
+				gap: 1rem;
+			}
+			.ai-note {
+				margin-top: 3rem;
+				padding: 1.25rem;
+				border: 1px solid rgba(12, 166, 200, 0.3);
+				border-radius: 8px;
+				background: #f5fbfc;
+			}
+			.ai-note h2 {
+				margin: 0 0 0.55rem;
+				color: #0f2638;
+				font-size: 1.35rem;
+			}
+			.ai-note p {
+				margin: 0;
+				color: #40566a;
+				line-height: 1.75;
+			}
+			@media (max-width: 900px) {
+				.question-grid,
+				.featured,
+				.pillar-grid,
+				.recent-grid {
+					grid-template-columns: 1fr;
 				}
 			}
 		</style>
@@ -89,24 +248,93 @@ const posts = (await getCollection('blog')).sort(
 	<body>
 		<Header />
 		<main>
-			<section>
-				<ul>
-					{
-						posts.map((post) => (
-							<li>
-								<a href={`/blog/${post.id}/`}>
-									{post.data.heroImage && (
-										<Image width={720} height={360} src={post.data.heroImage} alt="" />
-									)}
-									<h4 class="title">{post.data.title}</h4>
-									<p class="date">
-										<FormattedDate date={post.data.pubDate} />
-									</p>
-								</a>
-							</li>
-						))
-					}
-				</ul>
+			<section class="blog-hero">
+				<div class="inner">
+					<p class="eyebrow">QCCBot 中文博客</p>
+					<h1>AI 云手机运营的实用指南</h1>
+					<p class="hero-copy">
+						围绕真实用户问题，讲清楚 Android 云手机、AI 生成 AutoJS 脚本、任务日志、异常接管和批量移动端运营该怎么落地。
+					</p>
+					<div class="question-grid" aria-label="常见搜索问题">
+						{searchQuestions.map((question) => <a href="#content-pillars">{question}</a>)}
+					</div>
+				</div>
+			</section>
+
+			<section class="blog-body">
+				<div class="inner">
+					<div class="featured">
+						<article class="featured-card">
+							<a href={`/blog/${posts[0].id}/`}>
+								{posts[0].data.heroImage && (
+									<Image width={960} height={480} src={posts[0].data.heroImage} alt="" />
+								)}
+								<div class="card-copy">
+									<h2>{posts[0].data.title}</h2>
+									<p>{posts[0].data.description}</p>
+									<span class="date"><FormattedDate date={posts[0].data.pubDate} /></span>
+								</div>
+							</a>
+						</article>
+						<div class="pillar-card">
+							<h3>先回答问题，再介绍产品</h3>
+							<p>
+								这些文章从运营人员真实会搜索的问题出发：脚本失败、浏览器 Agent 进不了手机 App、多账号巡检、AI 接管边界等。
+							</p>
+							<ul>
+								<li><a href="/blog/browser-ai-agent-stops-at-mobile-apps/">浏览器 AI Agent 到手机 App 就停住怎么办</a></li>
+								<li><a href="/blog/how-to-generate-autojs-script-with-ai/">如何用 AI 生成 AutoJS 脚本</a></li>
+								<li><a href="/blog/ai-takeover-for-failed-autojs-script/">脚本失败后 AI 接管能做什么</a></li>
+							</ul>
+						</div>
+					</div>
+
+					<section class="pillar-section" id="content-pillars">
+						<h2 class="section-heading">按工作流问题阅读</h2>
+						<div class="pillar-grid">
+							{pillarPosts.map((pillar) => (
+								<article class="pillar-card">
+									<h3>{pillar.name}</h3>
+									<p>{pillar.description}</p>
+									<ul>
+										{pillar.posts.map((post) => (
+											<li>
+												<a href={`/blog/${post.id}/`}>{post.data.title}</a>
+											</li>
+										))}
+									</ul>
+								</article>
+							))}
+						</div>
+					</section>
+
+					<section class="pillar-section">
+						<h2 class="section-heading">最新文章</h2>
+						<div class="recent-grid">
+							{posts.slice(1, 13).map((post) => (
+								<article class="post-card">
+									<a href={`/blog/${post.id}/`}>
+										{post.data.heroImage && (
+											<Image width={560} height={280} src={post.data.heroImage} alt="" />
+										)}
+										<div class="card-copy">
+											<h3>{post.data.title}</h3>
+											<p>{post.data.description}</p>
+											<span class="date"><FormattedDate date={post.data.pubDate} /></span>
+										</div>
+									</a>
+								</article>
+							))}
+						</div>
+					</section>
+
+					<section class="ai-note">
+						<h2>同时服务读者和 AI 搜索</h2>
+						<p>
+							QCCBot 中文博客会用清楚的问题、实用案例、FAQ、结构化文章数据和 AI 可读文件，让读者和 AI 问答引擎都能理解每篇文章解决什么问题。
+						</p>
+					</section>
+				</div>
 			</section>
 		</main>
 		<Footer />
