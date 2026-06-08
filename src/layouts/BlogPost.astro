@@ -18,6 +18,7 @@ type Props = BlogData & {
 	relatedPosts?: RelatedPost[];
 	slug?: string;
 	body?: string;
+	hideMeta?: boolean;
 };
 
 const {
@@ -29,6 +30,7 @@ const {
 	headings = [],
 	relatedPosts = [],
 	body = '',
+	hideMeta = false,
 } = Astro.props;
 
 const articleUrl = new URL(Astro.url.pathname, 'https://cn-blog.qccbot.com').toString();
@@ -456,18 +458,22 @@ const category = lowerTitle.includes('autojs')
 						<h1>{title}</h1>
 						<p class="subtitle">{description}</p>
 						<div class="hero-footer">
-							<div class="post-meta">
-								<span>QCCBot 编辑部</span>
-								<span><FormattedDate date={pubDate} /></span>
-								<span>{readingTime} 分钟阅读</span>
-								{
-									updatedDate && (
+							{
+								!hideMeta && (
+									<div class="post-meta">
+										<span>QCCBot 编辑部</span>
 										<span>
-											更新于 <FormattedDate date={updatedDate} />
+											<FormattedDate date={pubDate} />
 										</span>
-									)
-								}
-							</div>
+										<span>{readingTime} 分钟阅读</span>
+										{updatedDate && (
+											<span>
+												更新于 <FormattedDate date={updatedDate} />
+											</span>
+										)}
+									</div>
+								)
+							}
 							<div class="share-row" aria-label="分享文章">
 								<a href={`https://www.linkedin.com/sharing/share-offsite/?url=${shareUrl}`} target="_blank"
 									>LinkedIn</a
