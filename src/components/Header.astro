@@ -17,9 +17,12 @@ const englishHref = new URL(Astro.url.pathname, 'https://blog.qccbot.com').toStr
 			<HeaderLink href="/">首页</HeaderLink>
 			<HeaderLink href="/blog">博客</HeaderLink>
 			<HeaderLink href="/about">关于</HeaderLink>
-			<a class="language-switch" href={englishHref}>EN</a>
 		</div>
 		<div class="social-links">
+			<div class="language-switch" aria-label="语言切换">
+				<span class="language-option active" aria-current="true">中</span>
+				<a class="language-option" href={englishHref}>EN</a>
+			</div>
 			<a class="telegram-link" href="https://t.me/QCCbot_cloudphone" target="_blank" rel="noopener noreferrer">
 				<span class="sr-only">通过 Telegram 联系 QCCBot 客服</span>
 				<svg viewBox="0 0 24 24" aria-hidden="true" width="30" height="30">
@@ -91,14 +94,42 @@ const englishHref = new URL(Astro.url.pathname, 'https://blog.qccbot.com').toStr
 		text-decoration: none;
 		border-bottom-color: var(--accent);
 	}
-	.language-switch {
-		margin-left: 0.25rem;
-		font-weight: 700;
-	}
 	.social-links,
 	.social-links a {
 		display: flex;
 		align-items: center;
+	}
+	.social-links {
+		gap: 0.45rem;
+	}
+	.language-switch {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.15rem;
+		padding: 0.18rem;
+		border: 1px solid #d7e7e2;
+		border-radius: 14px;
+		background: #fbfefd;
+		box-shadow: inset 0 0 0 1px rgba(12, 166, 200, 0.03);
+	}
+	.language-option {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 2.55rem;
+		min-height: 2.25rem;
+		padding: 0 0.55rem;
+		border: 0;
+		border-radius: 10px;
+		color: #63746f;
+		font-weight: 800;
+		line-height: 1;
+		text-decoration: none;
+	}
+	.language-option.active {
+		background: #fff;
+		color: #27755e;
+		box-shadow: 0 10px 22px rgba(15, 38, 56, 0.08);
 	}
 	.telegram-link {
 		color: #229ed9;
@@ -126,8 +157,18 @@ const englishHref = new URL(Astro.url.pathname, 'https://blog.qccbot.com').toStr
 			padding-left: 0.35em;
 			font-size: 0.95rem;
 		}
+		.language-switch {
+			border-radius: 12px;
+		}
+		.language-option {
+			min-width: 2rem;
+			min-height: 2rem;
+			padding: 0 0.4rem;
+			font-size: 0.9rem;
+		}
 		.social-links {
 			margin-left: auto;
+			gap: 0.2rem;
 		}
 		.social-links .icon-link,
 		.social-links a[href='/blog'] {
