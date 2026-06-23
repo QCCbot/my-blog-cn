@@ -1,7 +1,7 @@
 ---
 title: '一个运营面对多个 Telegram 账号时，混乱通常不是人的问题'
 description: '多 Telegram 账号运营真正难的不是记住账号，而是把不同业务环境、责任和交接方式拆清楚。'
-pubDate: 'Jun 22 2026'
+pubDate: 'Jun 23 2026'
 heroImage: '../../assets/qccbot-cross-border-ecommerce-ai-operations-cover.png'
 ---
 

@@ -1,7 +1,7 @@
 ---
 title: 'Telegram 里的云手机入口，为什么正在成为移动端团队的工作习惯？'
 description: '移动端运营团队越来越依赖聊天工具协作，但真正的账号和 App 操作需要稳定、可交接的云手机环境。'
-pubDate: 'Jun 22 2026'
+pubDate: 'Jun 23 2026'
 heroImage: '../../assets/qccbot-social-media-script-library-cover.png'
 ---
 

@@ -1,7 +1,7 @@
 ---
 title: '云手机里的 Telegram，不只是一个 App：它是业务环境的一部分'
 description: '当团队在云手机中处理 Telegram 账号时，隐私和交接的重点不是截图多少，而是业务环境有没有被正确分开。'
-pubDate: 'Jun 22 2026'
+pubDate: 'Jun 23 2026'
 heroImage: '../../assets/qccbot-isolated-cloud-phones-account-matrices-cover.png'
 ---
 
