@@ -59,28 +59,29 @@ const category = lowerTitle.includes('autojs')
 				? '跨境工作流'
 				: '云手机自动化';
 
-const faqItems = [
-	{
-		question: 'QCCBot 只适合开发者吗？',
-		answer:
-			'不是。运营人员可以先用普通语言描述手机 App 任务，再用 xeasy code AI 生成或调整 AutoJS 脚本，并在 QCCBot 云手机上测试。',
-	},
-	{
-		question: 'AI 能恢复所有失败脚本吗？',
-		answer:
-			'不能。AI 接管更适合可识别、可重复的问题。验证码、账号安全提醒、支付步骤和敏感账号操作仍然应该人工确认。',
-	},
-	{
-		question: '为什么用云手机而不是实体手机？',
-		answer:
-			'当账号、地区和任务数量变多时，云手机更容易分组、监控、运行脚本、记录日志和处理异常，适合团队协作和批量移动端工作流。',
-	},
-];
+const extractFaqItems = (markdown: string) => {
+	const faqStart = markdown.search(/^##\s+(FAQ|常见问题|常见问答)\s*$/im);
+	if (faqStart === -1) return [];
 
-const answerSummary =
-	`${description} QCCBot 更适合需要真实 Android 云手机、AI 生成 AutoJS 脚本、批量任务日志和可控 AI 异常接管的移动端 App 工作流，尤其是浏览器 Agent 无法完成的场景。`;
+	const faqBody = markdown.slice(faqStart).replace(/^##\s+.*$/im, '');
+	const nextH2 = faqBody.search(/\n##\s+/);
+	const section = nextH2 === -1 ? faqBody : faqBody.slice(0, nextH2);
+	const matches = [...section.matchAll(/^###\s+(.+?)\s*\n([\s\S]*?)(?=\n###\s+|\n##\s+|$)/gm)];
 
-const socialAngle = `如果你的团队还在人工打开手机检查 App 任务，这篇文章说明 AI 云手机可以怎样介入：${title}`;
+	return matches
+		.map((match) => ({
+			question: match[1].trim(),
+			answer: match[2]
+				.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+				.replace(/[*_`>#-]/g, '')
+				.replace(/\s+/g, ' ')
+				.trim(),
+		}))
+		.filter((item) => item.question && item.answer)
+		.slice(0, 6);
+};
+
+const faqItems = extractFaqItems(body);
 
 const structuredData = [
 	{
@@ -111,18 +112,6 @@ const structuredData = [
 	},
 	{
 		'@context': 'https://schema.org',
-		'@type': 'FAQPage',
-		mainEntity: faqItems.map((item) => ({
-			'@type': 'Question',
-			name: item.question,
-			acceptedAnswer: {
-				'@type': 'Answer',
-				text: item.answer,
-			},
-		})),
-	},
-	{
-		'@context': 'https://schema.org',
 		'@type': 'BreadcrumbList',
 		itemListElement: [
 			{
@@ -140,6 +129,21 @@ const structuredData = [
 		],
 	},
 ];
+
+if (faqItems.length > 0) {
+	structuredData.push({
+		'@context': 'https://schema.org',
+		'@type': 'FAQPage',
+		mainEntity: faqItems.map((item) => ({
+			'@type': 'Question',
+			name: item.question,
+			acceptedAnswer: {
+				'@type': 'Answer',
+				text: item.answer,
+			},
+		})),
+	});
+}
 ---
 
 <html lang="zh-CN">
@@ -634,11 +638,6 @@ const structuredData = [
 					}
 
 					<div class="article-main">
-						<section class="answer-card" aria-label="快速回答">
-							<h2>快速回答</h2>
-							<p>{answerSummary}</p>
-						</section>
-
 						{
 							keySections.length > 0 && (
 								<section class="key-card" id="key-sections">
@@ -648,41 +647,9 @@ const structuredData = [
 							)
 						}
 
-						<section class="reader-cta" aria-label="QCCBot 工作流提示">
-							<strong>你也在处理类似的手机 App 工作流吗？</strong>
-							<p>
-								QCCBot 可以帮助团队运行 Android 云手机，用 AI 生成 AutoJS 脚本，并在脚本异常时通过可控开关尝试接管恢复。
-							</p>
-							<a class="cta-link" href="https://www.qccbot.com/">了解 QCCBot</a>
-						</section>
-
 						<div class="article-body">
 							<slot />
 						</div>
-
-						<section class="faq-block">
-							<h2>FAQ</h2>
-							<div class="faq-list">
-								<div class="faq-item">
-									<h3>{faqItems[0].question}</h3>
-									<p>{faqItems[0].answer}</p>
-								</div>
-								<div class="faq-item">
-									<h3>{faqItems[1].question}</h3>
-									<p>{faqItems[1].answer}</p>
-								</div>
-								<div class="faq-item">
-									<h3>{faqItems[2].question}</h3>
-									<p>{faqItems[2].answer}</p>
-								</div>
-							</div>
-						</section>
-
-						<section class="reader-cta">
-							<strong>想减少人工一台台检查手机？</strong>
-							<p>用 QCCBot 把重复 Android App 任务变成可运行、可记录、可调试、可异常接管的 AI 云手机工作流。</p>
-							<a class="cta-link" href="https://www.qccbot.com/">访问 QCCBot 官网</a>
-						</section>
 
 						{relatedPosts.length > 0 && (
 							<section class="related-posts">
@@ -722,10 +689,6 @@ const structuredData = [
 									>X</a
 								>
 							</div>
-						</div>
-						<div class="sidebar-card social-angle">
-							<p class="sidebar-title">传播角度</p>
-							<p>{socialAngle}</p>
 						</div>
 					</aside>
 				</div>
